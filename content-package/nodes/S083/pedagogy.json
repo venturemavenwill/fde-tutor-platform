@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "content_node_id": "S083",
+  "policy_version": "s083-policy-1",
+  "expected_duration_minutes": 27,
+  "organizer": "Distinguish momentum as a conjunction of conditions from momentum as a mood. Use capacity drift as a concrete example, then separate a customer-owned unpaid remedy from supplier interest.",
+  "vocabulary": [
+    {
+      "term": "decay path",
+      "definition": "A named condition whose failure would erode momentum, such as attention, pain, reachability, workload, or authority."
+    },
+    {
+      "term": "permission versus availability",
+      "definition": "Permission to request capacity is distinct from deployable capacity at a particular time and place."
+    },
+    {
+      "term": "graceful degradation",
+      "definition": "A configured fallback that fires on an observed failure state rather than waiting for a person to notice."
+    },
+    {
+      "term": "unpaid version",
+      "definition": "The complete customer-owned remedy written before the paid proposal."
+    },
+    {
+      "term": "drift register",
+      "definition": "A dated artifact recording assumptions, current observations, the moved input, failure trigger, and conflict of interest."
+    }
+  ],
+  "expectation_prompt": "What do you expect to be able to design or distinguish after this session?",
+  "cold_start_elicitations": [
+    {
+      "source_node_id": "S009",
+      "prompt": "What makes an opportunity suitable for forward-deployed intervention rather than ordinary delivery?"
+    },
+    {
+      "source_node_id": "S064",
+      "prompt": "What is the correct order for checking availability before making a capacity commitment?"
+    },
+    {
+      "source_node_id": "S078",
+      "prompt": "Which obligations remain after delivery and how would you make one visible?"
+    },
+    {
+      "source_node_id": "S082",
+      "prompt": "What distinguishes compliance while a supplier is present from adoption after departure?"
+    }
+  ],
+  "priming_prompts": [
+    "Think of a change that seemed adopted while a supplier or project team was present. What condition disappeared first after they left?",
+    "Where have you seen a paid follow-on proposal that was useful and still hard to trust? What would the no-fee version contain?",
+    "Which assumption behind a current cost or capacity decision may no longer be true?"
+  ],
+  "unpaid_remedy": {
+    "prompt": "Write the version of your reinforcement remedy that earns your organization nothing. Name what the customer can do with the people and authority they already have.",
+    "required_event": "UnpaidRemedyRecorded",
+    "wire_event": "unpaid_remedy_recorded",
+    "locks": [
+      "four_element_criterion",
+      "paid_proposal_improvement"
+    ]
+  },
+  "reveals": {
+    "four_element_criterion": {
+      "required_event": "UnpaidRemedyRecorded",
+      "elements": [
+        "A customer-employed owner with authority",
+        "A cadence sustainable without supplier presence",
+        "An artifact produced whether or not anyone is watching",
+        "A trigger that is an observable state change rather than a person remembering"
+      ]
+    }
+  },
+  "comparison_prompt": "Compare your unpaid remedy with each element of the criterion. Name what was absent or weaker in your first answer before revising it.",
+  "authentic_transfer": {
+    "prompt": "Draft a synthetic or approved drift register for one live condition: original assumption, current observation, moved input, first visible sign, customer-owned remedy, and configured fallback.",
+    "artifact_classification": "AUTHENTIC_WORK",
+    "pilot_restriction": "SYNTHETIC_REDACTED_OR_EXPLICITLY_APPROVED"
+  },
+  "retrieval": {
+    "mode": "CHANGED_CONTEXT_SAME_NODE",
+    "prompt": "Without reopening the source, explain how you would tell whether reinforcement survives supplier departure and how you would test the first failing condition.",
+    "carry_forward_nodes": []
+  },
+  "assessment_posture": {
+    "assessment_bearing": false,
+    "mastery_effect": "NONE",
+    "entrustment_effect": "NONE",
+    "required_narrative": true
+  }
+}

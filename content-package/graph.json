@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "source_commit": "709a3c89985635330df7dc3c4ca6593888556d50",
+  "nodes": [
+    {
+      "id": "S083",
+      "depends_on": [],
+      "dependency_closure_size": 1,
+      "must_declare": [],
+      "satisfiable_from": "either",
+      "retrieves_from": [
+        {
+          "node_id": "S009",
+          "mode": "UNSCORED_COLD_START"
+        },
+        {
+          "node_id": "S064",
+          "mode": "UNSCORED_COLD_START"
+        },
+        {
+          "node_id": "S078",
+          "mode": "UNSCORED_COLD_START"
+        },
+        {
+          "node_id": "S082",
+          "mode": "UNSCORED_COLD_START"
+        }
+      ],
+      "retrieved_by": [
+        {
+          "node_id": "S084",
+          "mode": "DEFERRED"
+        },
+        {
+          "node_id": "S085",
+          "mode": "DEFERRED"
+        }
+      ],
+      "phase1_retrieval": {
+        "mode": "CHANGED_CONTEXT_SAME_NODE",
+        "node_id": "S083"
+      }
+    }
+  ]
+}

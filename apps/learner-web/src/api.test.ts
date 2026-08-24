@@ -1,0 +1,38 @@
+import { expect, test, vi } from 'vitest'
+import { api } from './api'
+
+test('reuses a pending idempotency key after a lost response', async () => {
+  const observedKeys: string[] = []
+  let attempt = 0
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      observedKeys.push(new Headers(init?.headers).get('Idempotency-Key') ?? '')
+      attempt += 1
+      if (attempt === 1) {
+        throw new TypeError('Simulated connection loss after submission')
+      }
+      return new Response('{}', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }),
+  )
+  localStorage.setItem(
+    'fde-tutor:idempotency:another-account:/api/v1/s083/sessions',
+    '{"fingerprint":"stale","idempotencyKey":"stale-key"}',
+  )
+
+  await expect(api.startSession('a'.repeat(64))).rejects.toThrow(
+    'Simulated connection loss',
+  )
+  await api.startSession('a'.repeat(64))
+
+  expect(observedKeys[0]).not.toBe('')
+  expect(observedKeys[1]).toBe(observedKeys[0])
+  expect(
+    Array.from({ length: localStorage.length }, (_, index) =>
+      localStorage.key(index),
+    ).filter((key) => key?.startsWith('fde-tutor:idempotency:')),
+  ).toEqual([])
+})

@@ -1,0 +1,30 @@
+{
+  "name": "fde-tutor-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private Phase 0/1 build workspace for the S083 FDE Tutor platform spine.",
+  "workspaces": [
+    "apps/learner-web"
+  ],
+  "scripts": {
+    "build": "npm run contracts:validate && npm run openapi:validate && npm run scope:validate && npm run build --workspace @fde-tutor/learner-web && dotnet build FdeTutor.sln",
+    "contracts:hash": "node tools/hash-content-package.mjs",
+    "contracts:validate": "node tools/validate-contracts.mjs",
+    "contracts:offering": "node tools/validate-contracts.mjs --offering",
+    "openapi:validate": "node tools/validate-openapi.mjs",
+    "scope:validate": "node tools/validate-scope.mjs",
+    "lint": "npm run lint --workspace @fde-tutor/learner-web && dotnet format FdeTutor.sln --verify-no-changes --no-restore",
+    "test": "npm run test:contracts && npm run openapi:validate && npm run scope:validate && npm run test --workspace @fde-tutor/learner-web && dotnet test FdeTutor.sln",
+    "validate": "npm run lint && npm run build && npm test",
+    "test:contracts": "node --test tests/contracts/**/*.test.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.8.1"
+  },
+  "engines": {
+    "node": ">=24",
+    "npm": ">=11"
+  }
+}

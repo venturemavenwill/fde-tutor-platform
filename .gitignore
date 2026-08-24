@@ -1,0 +1,35 @@
+# Private local governance, planning, and coding-agent context.
+/AGENTS.md
+/.github/copilot-instructions.md
+/.github/instructions/
+/docs/
+/backlog/
+
+# Local secrets and developer overrides.
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Generated dependencies, build outputs, and tool state.
+node_modules/
+**/node_modules/
+bin/
+**/bin/
+obj/
+**/obj/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.playwright-mcp/
+
+# Python and operating-system artifacts.
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+*.log

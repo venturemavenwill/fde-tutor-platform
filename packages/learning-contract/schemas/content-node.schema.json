@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fde-tutor.local/schemas/content-node.schema.json",
+  "title": "FDE Tutor content node",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "namespace",
+    "assessment_bearing",
+    "platform_bearing",
+    "freshness_status",
+    "source",
+    "criteria"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^S[0-9]{3}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "namespace": {
+      "enum": [
+        "durable",
+        "platform",
+        "assessment"
+      ]
+    },
+    "assessment_bearing": {
+      "type": "boolean"
+    },
+    "platform_bearing": {
+      "type": "boolean"
+    },
+    "freshness_status": {
+      "enum": [
+        "NOT_APPLICABLE",
+        "UNVERIFIED",
+        "CURRENT",
+        "STALE"
+      ]
+    },
+    "platform_instance_verified_on": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "platform_verify_before": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "branch",
+        "commit",
+        "path"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/criterion"
+      }
+    }
+  },
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterion_id",
+        "statement",
+        "assessable",
+        "assesses_namespace"
+      ],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assessable": {
+          "type": "boolean"
+        },
+        "assesses_namespace": {
+          "enum": [
+            "durable",
+            "platform",
+            "assessment"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "assessable": {
+                "const": true
+              }
+            },
+            "required": [
+              "assessable"
+            ]
+          },
+          "then": {
+            "properties": {
+              "assesses_namespace": {
+                "not": {
+                  "const": "platform"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

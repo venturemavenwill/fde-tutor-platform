@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "content_node_id": "S083",
+  "assessment_bearing": false,
+  "projection_effect": {
+    "mastery": "NONE",
+    "entrustment": "NONE",
+    "carry_forward": "PROHIBITED"
+  },
+  "observations": [
+    {
+      "competency_id": "momentum-decay.design-reinforcement",
+      "statement": "The learner practices designing customer-owned reinforcement by naming an owner, cadence, artifact, and observable trigger.",
+      "record": [
+        "PARTICIPATION",
+        "LEARNER_NARRATIVE",
+        "SUPPORT_USED",
+        "HUMAN_FEEDBACK"
+      ],
+      "criteria": [
+        "reinforcement.customer-owned-owner",
+        "reinforcement.sustainable-cadence",
+        "reinforcement.unattended-artifact",
+        "reinforcement.state-change-trigger"
+      ],
+      "ordinal_evidence_requires_narrative": true,
+      "numeric_mastery_allowed": false
+    }
+  ]
+}

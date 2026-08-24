@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fde-tutor.local/schemas/learner-event.schema.json",
+  "title": "FDE Tutor learner event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "eventType",
+    "eventVersion",
+    "occurredAt",
+    "recordedAt",
+    "tenantId",
+    "learnerId",
+    "sessionId",
+    "contentNodeId",
+    "contentRevision",
+    "correlationId",
+    "causationId",
+    "idempotencyKey",
+    "actor",
+    "payload"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "enum": [
+        "LearningSessionStarted",
+        "LearningSessionEnded",
+        "NodeOpened",
+        "ExpectationRecorded",
+        "PrerequisiteRecallAttempted",
+        "PrimingResponseSubmitted",
+        "UnpaidRemedyRecorded",
+        "SourceViewed",
+        "ModelAnswerRevealed",
+        "ComparisonRecorded",
+        "ProposalRevisionRecorded",
+        "RetrievalScheduled",
+        "RetrievalBecameDue",
+        "RetrievalCompleted",
+        "RecommendationIssued",
+        "ArtifactSubmitted",
+        "EvidenceEvaluationProposed",
+        "EvidenceEvaluationConfirmed",
+        "EvidenceEvaluationOverridden",
+        "EvaluationDisputed",
+        "InstructorFeedbackAdded",
+        "EventCorrectionRecorded"
+      ]
+    },
+    "eventVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "learnerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sessionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "contentNodeId": {
+      "const": "S083"
+    },
+    "contentRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "causationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "learner",
+            "reviewer",
+            "system"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "ArtifactSubmitted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/authenticTransferPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "LearningSessionStarted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/sessionStartedPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "ExpectationRecorded",
+              "UnpaidRemedyRecorded",
+              "ComparisonRecorded",
+              "ProposalRevisionRecorded",
+              "RetrievalCompleted"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/textResponsePayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "PrerequisiteRecallAttempted",
+              "PrimingResponseSubmitted"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/namedResponsesPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "SourceViewed",
+              "ModelAnswerRevealed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/acknowledgementPayload"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "RetrievalScheduled"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "#/$defs/retrievalScheduledPayload"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sessionStartedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "assessmentPosture"
+      ],
+      "properties": {
+        "route": {
+          "const": "S083"
+        },
+        "assessmentPosture": {
+          "const": "NON_ASSESSMENT"
+        }
+      }
+    },
+    "textResponsePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "response"
+      ],
+      "properties": {
+        "response": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        }
+      }
+    },
+    "namedResponsesPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "responses"
+      ],
+      "properties": {
+        "responses": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12000
+          }
+        }
+      }
+    },
+    "acknowledgementPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acknowledged"
+      ],
+      "properties": {
+        "acknowledged": {
+          "const": true
+        }
+      }
+    },
+    "retrievalScheduledPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dueAt",
+        "mode"
+      ],
+      "properties": {
+        "dueAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mode": {
+          "const": "CHANGED_CONTEXT_SAME_NODE"
+        }
+      }
+    },
+    "authenticTransferPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "response",
+        "classification",
+        "pilotRestriction"
+      ],
+      "properties": {
+        "response": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "classification": {
+          "const": "AUTHENTIC_WORK"
+        },
+        "pilotRestriction": {
+          "const": "SYNTHETIC_REDACTED_OR_EXPLICITLY_APPROVED"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,243 @@
+openapi: 3.1.0
+info:
+  title: FDE Tutor S083 Platform API
+  version: 1.0.0
+  description: >
+    Phase 1 no-LMS API for the S083 learning loop. All commands require a
+    validated learner identity and an Idempotency-Key. S083 is
+    non-assessment-bearing and has no mastery effect.
+servers:
+  - url: http://localhost:5080
+    description: Local development
+security:
+  - entra:
+      - access_as_user
+paths:
+  /api/v1/s083/content:
+    get:
+      summary: Get the public, pre-reveal S083 content contract
+      responses:
+        "200":
+          description: Versioned S083 organizer, vocabulary, and prompts
+  /api/v1/s083/learning-home:
+    get:
+      summary: Get the current S083 state and due retrievals
+      responses:
+        "200":
+          description: Learner-owned current state
+  /api/v1/s083/sessions:
+    post:
+      summary: Start an S083 learning session
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisionRequest"
+      responses:
+        "200":
+          description: Session start event and current policy
+  /api/v1/s083/sessions/{sessionId}:
+    get:
+      summary: Get one learner-owned S083 session
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Event-backed S083 state
+        "404":
+          description: No visible session for the authenticated learner
+  /api/v1/s083/sessions/{sessionId}/expectation:
+    $ref: "#/components/pathItems/TextCommand"
+  /api/v1/s083/sessions/{sessionId}/cold-start:
+    $ref: "#/components/pathItems/NamedCommand"
+  /api/v1/s083/sessions/{sessionId}/priming:
+    $ref: "#/components/pathItems/NamedCommand"
+  /api/v1/s083/sessions/{sessionId}/unpaid-remedy:
+    $ref: "#/components/pathItems/TextCommand"
+  /api/v1/s083/sessions/{sessionId}/criterion:
+    get:
+      summary: Get the criterion only after UnpaidRemedyRecorded
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Four-element durable criterion
+        "409":
+          description: UNPAID_REMEDY_REQUIRED
+  /api/v1/s083/sessions/{sessionId}/source:
+    get:
+      summary: Get the authored session source after UnpaidRemedyRecorded
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Sanitizable package-owned HTML
+        "409":
+          description: UNPAID_REMEDY_REQUIRED
+  /api/v1/s083/sessions/{sessionId}/source/open:
+    post:
+      summary: Record opening the authored source and return its content
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisionRequest"
+      responses:
+        "200":
+          description: SourceViewed event, policy, and package-owned HTML
+        "409":
+          description: Typed policy denial
+  /api/v1/s083/sessions/{sessionId}/criterion/reveal:
+    post:
+      summary: Record criterion reveal and return the criterion
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisionRequest"
+      responses:
+        "200":
+          description: Reveal event, policy, and criterion
+        "409":
+          description: Typed policy denial
+  /api/v1/s083/sessions/{sessionId}/comparison:
+    $ref: "#/components/pathItems/TextCommand"
+  /api/v1/s083/sessions/{sessionId}/revision:
+    $ref: "#/components/pathItems/TextCommand"
+  /api/v1/s083/sessions/{sessionId}/authentic-transfer:
+    $ref: "#/components/pathItems/TextCommand"
+  /api/v1/s083/sessions/{sessionId}/retrieval-schedule:
+    post:
+      summary: Schedule changed-context S083 retrieval
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetrievalScheduleRequest"
+      responses:
+        "200":
+          description: RetrievalScheduled event
+  /api/v1/s083/sessions/{sessionId}/retrieval:
+    $ref: "#/components/pathItems/TextCommand"
+components:
+  securitySchemes:
+    entra:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token
+          scopes:
+            access_as_user: Use the FDE Tutor Platform as the signed-in learner
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+  schemas:
+    RevisionRequest:
+      type: object
+      required:
+        - contentRevision
+      properties:
+        contentRevision:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+    TextSubmissionRequest:
+      allOf:
+        - $ref: "#/components/schemas/RevisionRequest"
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              type: string
+              minLength: 1
+              maxLength: 12000
+    NamedResponsesRequest:
+      allOf:
+        - $ref: "#/components/schemas/RevisionRequest"
+        - type: object
+          required:
+            - responses
+          properties:
+            responses:
+              type: object
+              minProperties: 1
+              additionalProperties:
+                type: string
+                minLength: 1
+                maxLength: 12000
+    RetrievalScheduleRequest:
+      allOf:
+        - $ref: "#/components/schemas/RevisionRequest"
+        - type: object
+          required:
+            - dueAt
+          properties:
+            dueAt:
+              type: string
+              format: date-time
+  pathItems:
+    TextCommand:
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      post:
+        summary: Append one text response under deterministic S083 policy
+        parameters:
+          - $ref: "#/components/parameters/IdempotencyKey"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TextSubmissionRequest"
+        responses:
+          "200":
+            description: Accepted event and current policy
+          "409":
+            description: Typed policy or revision denial
+    NamedCommand:
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      post:
+        summary: Append a named response set under deterministic S083 policy
+        parameters:
+          - $ref: "#/components/parameters/IdempotencyKey"
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NamedResponsesRequest"
+        responses:
+          "200":
+            description: Accepted event and current policy
+          "409":
+            description: Typed policy or revision denial

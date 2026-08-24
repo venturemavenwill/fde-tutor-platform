@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-FdeTutor.ProjectionWorker-b7527733-6452-4562-a0e7-86e48d866024</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\packages\learning-contract\dotnet\FdeTutor.Contracts.csproj" />
+    <ProjectReference Include="..\..\packages\platform-domain\FdeTutor.Domain.csproj" />
+    <ProjectReference Include="..\..\packages\platform-persistence\FdeTutor.Persistence.csproj" />
+  </ItemGroup>
+</Project>

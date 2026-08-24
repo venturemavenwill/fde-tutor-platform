@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "id": "S083",
+  "title": "Momentum, and Why It Decays",
+  "namespace": "durable",
+  "assessment_bearing": false,
+  "platform_bearing": true,
+  "freshness_status": "UNVERIFIED",
+  "platform_instance_verified_on": null,
+  "platform_verify_before": null,
+  "source": {
+    "repository": "https://github.com/fmgel22/fdeplaybook.git",
+    "branch": "venturemavenwill",
+    "commit": "709a3c89985635330df7dc3c4ca6593888556d50",
+    "path": "tools/rewrite/S083.md",
+    "canonical_url": "https://fdeplaybook.vercel.app/hve/seminars/S083.html"
+  },
+  "criteria": [
+    {
+      "criterion_id": "reinforcement.customer-owned-owner",
+      "statement": "The proposed owner is employed by the customer and has authority to act.",
+      "assessable": false,
+      "assesses_namespace": "durable"
+    },
+    {
+      "criterion_id": "reinforcement.sustainable-cadence",
+      "statement": "The cadence can continue without supplier presence.",
+      "assessable": false,
+      "assesses_namespace": "durable"
+    },
+    {
+      "criterion_id": "reinforcement.unattended-artifact",
+      "statement": "The artifact is produced whether or not an observer is present.",
+      "assessable": false,
+      "assesses_namespace": "durable"
+    },
+    {
+      "criterion_id": "reinforcement.state-change-trigger",
+      "statement": "The trigger is an observable state change, not a person remembering.",
+      "assessable": false,
+      "assesses_namespace": "durable"
+    }
+  ]
+}

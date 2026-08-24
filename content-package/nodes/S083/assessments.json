@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "content_node_id": "S083",
+  "assessment_bearing": false,
+  "purpose": "PRACTICE_AND_DISCRIMINATION_ONLY",
+  "contrast_cases": [
+    {
+      "id": "diagnosis-is-also-the-sale",
+      "prompt": "A recurring paid review would help and also satisfies the supplier's utilization target. What must be written first?",
+      "durable_discrimination": "Write the complete customer-owned unpaid remedy before judging what paid capability is additional."
+    },
+    {
+      "id": "owner-is-the-supplier",
+      "prompt": "The supplier's architect owns the review after the engagement ends.",
+      "durable_discrimination": "The condition is not customer-owned and cannot demonstrate adoption after supplier departure."
+    },
+    {
+      "id": "cadence-requires-presence",
+      "prompt": "The review occurs monthly, but only when the FDE schedules and chairs it.",
+      "durable_discrimination": "A calendar interval is not sustainable cadence when execution depends on supplier presence."
+    },
+    {
+      "id": "artifact-produced-on-demand",
+      "prompt": "The report exists whenever leadership asks the project team to prepare it.",
+      "durable_discrimination": "The artifact is not an operating mechanism if it is produced only under observation."
+    },
+    {
+      "id": "trigger-is-remembering",
+      "prompt": "The owner will notice when momentum falls and restart the review.",
+      "durable_discrimination": "Remembering is not an observable state-change trigger."
+    },
+    {
+      "id": "quota-mistaken-for-capacity",
+      "prompt": "Approved quota is presented as proof that capacity is available.",
+      "durable_discrimination": "Permission, availability, and commitment are separate claims."
+    },
+    {
+      "id": "commitment-mistaken-for-guarantee",
+      "prompt": "A reservation is presented as a guarantee that the required runtime capacity exists.",
+      "durable_discrimination": "A price commitment does not prove deployable availability."
+    },
+    {
+      "id": "degradation-described-not-configured",
+      "prompt": "The plan says the team will move traffic if the primary capacity saturates.",
+      "durable_discrimination": "Graceful degradation requires an observed trigger and configured fallback."
+    },
+    {
+      "id": "platform-number-treated-as-durable",
+      "prompt": "A current price, ratio, or quota value is used as the criterion for a durable design decision.",
+      "durable_discrimination": "Perishable platform instances require current grounding and cannot be the assessed object."
+    }
+  ],
+  "retry_policy": {
+    "requires_new_evidence": true,
+    "reorder_only_is_invalid": true
+  }
+}

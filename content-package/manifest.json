@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "package_id": "fde-s083-development",
+  "content_revision": "032601ea05b48ed716e72ac217a0024ec6ae413b0b27113c704ba6ab4f332522",
+  "graph_hash": "5964e3cf7cace1a6129127135322caf0190aade12fba6f59f5b678c3419be054",
+  "built_at": "2026-08-24T00:00:00Z",
+  "offering_status": "DEVELOPMENT_ONLY",
+  "minimum_runtime_version": "0.1.0",
+  "source": {
+    "repository": "https://github.com/fmgel22/fdeplaybook.git",
+    "branch": "venturemavenwill",
+    "commit": "709a3c89985635330df7dc3c4ca6593888556d50",
+    "canonical_owner_confirmed": false,
+    "upstream_hve_revision": null
+  },
+  "assessment_bank_version": "s083-non-assessment-1",
+  "namespace_policy_version": "1.0.0",
+  "platform_freshness_policy_version": "1.0.0",
+  "policy_version": "s083-policy-1",
+  "nodes": [
+    {
+      "id": "S083",
+      "path": "nodes/S083",
+      "hashes": {
+        "node.json": "3cc0838d86d3aaf640c75e4efe3a2ac18304b9552f9273f55d7bc9e42c9f91b3",
+        "content.html": "0b26f2399f1d519f5c68f42627a1e99a535c2d1566205980e33adedfe4f26cdb",
+        "pedagogy.json": "41179eaf99dca1eae45fc4bb1f461d420b2bccf1660ccf6d0b2eeac3e70b24c7",
+        "competencies.json": "6fc3572908edc7054117c8e536d3709cfea6e777d4d3d89a4a6f655b494e1fc2",
+        "assessments.json": "e6f2a68aa523599c8de17d02962b7f2fc96d1ac49f3aad59a460f0638e656f80",
+        "citations.json": "621794ccdf1ec9eef92fe52c692947bf78e63880d6dc4c7098a15f959646d707"
+      }
+    }
+  ]
+}

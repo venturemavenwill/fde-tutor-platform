@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "content_node_id": "S083",
+  "source_commit": "709a3c89985635330df7dc3c4ca6593888556d50",
+  "sources": [
+    {
+      "passage_id": "S083-rewrite-before-you-start",
+      "source_path": "tools/rewrite/S083.md",
+      "canonical_url": "https://fdeplaybook.vercel.app/hve/seminars/S083.html",
+      "supports": [
+        "unpaid-remedy-first",
+        "conflict-of-interest"
+      ]
+    },
+    {
+      "passage_id": "S083-learning-sidecar",
+      "source_path": "tools/learning/S083.json",
+      "canonical_url": "https://fdeplaybook.vercel.app/hve/seminars/S083.html",
+      "supports": [
+        "organizer",
+        "vocabulary",
+        "priming",
+        "recall",
+        "authentic-transfer"
+      ]
+    },
+    {
+      "passage_id": "WP083-predictions",
+      "source_path": "hve/whitepapers/WP-083.html",
+      "canonical_url": "https://fdeplaybook.vercel.app/hve/whitepapers/WP-083.html",
+      "supports": [
+        "pilot-instruments",
+        "warrant-limits"
+      ]
+    }
+  ],
+  "platform_grounding": {
+    "status": "UNVERIFIED",
+    "verified_passage_ids": [],
+    "on_missing": "GROUNDING_REQUIRED"
+  }
+}

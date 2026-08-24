@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fde-tutor.local/schemas/pedagogical-policy.schema.json",
+  "title": "FDE Tutor pedagogical policy decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyVersion",
+    "contentNodeId",
+    "state",
+    "permittedActions",
+    "criterionRevealAllowed",
+    "paidProposalImprovementAllowed",
+    "evidenceBearing",
+    "masteryEffect",
+    "humanReviewRequired",
+    "groundingResult"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contentNodeId": {
+      "const": "S083"
+    },
+    "state": {
+      "enum": [
+        "Orient",
+        "ExpectationRequired",
+        "ColdStartRequired",
+        "PrimingRequired",
+        "UnpaidRemedyRequired",
+        "SourceAvailable",
+        "CriterionAvailable",
+        "ComparisonRequired",
+        "RevisionAvailable",
+        "AuthenticTransferRequired",
+        "RetrievalScheduleRequired",
+        "RetrievalScheduled",
+        "RetrievalDue",
+        "Complete"
+      ]
+    },
+    "permittedActions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+        "ViewOrganizer",
+        "RecordExpectation",
+        "AttemptColdStart",
+        "AnswerPriming",
+        "RecordUnpaidRemedy",
+        "ViewSource",
+        "RevealCriterion",
+        "RecordComparison",
+        "RecordRevision",
+        "RecordAuthenticTransfer",
+        "ScheduleRetrieval",
+        "CompleteRetrieval"
+        ]
+      }
+    },
+    "criterionRevealAllowed": {
+      "type": "boolean"
+    },
+    "paidProposalImprovementAllowed": {
+      "type": "boolean"
+    },
+    "evidenceBearing": {
+      "const": false
+    },
+    "masteryEffect": {
+      "const": "NONE"
+    },
+    "humanReviewRequired": {
+      "type": "boolean"
+    },
+    "groundingResult": {
+      "enum": [
+        "GROUNDED",
+        "GROUNDING_REQUIRED",
+        "NOT_APPLICABLE"
+      ]
+    },
+    "denialReason": {
+      "enum": [
+        "None",
+        "SessionRequired",
+        "ExpectationRequired",
+        "ColdStartRequired",
+        "PrimingRequired",
+        "UnpaidRemedyRequired",
+        "SourceViewRequired",
+        "CriterionRevealRequired",
+        "ComparisonRequired",
+        "RevisionRequired",
+        "AuthenticTransferRequired",
+        "RetrievalScheduleRequired",
+        "RetrievalNotDue",
+        "DueRetrievalRequired",
+        "GroundingRequired",
+        "RevisionMismatch",
+        "ActionAlreadyCompleted"
+      ]
+    }
+  }
+}

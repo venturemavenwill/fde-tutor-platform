@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fde-tutor.local/schemas/artifact.schema.json",
+  "title": "FDE Tutor artifact metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "artifactVersion",
+    "tenantId",
+    "learnerId",
+    "contentNodeId",
+    "contentRevision",
+    "classification",
+    "retentionPolicy",
+    "storageReference",
+    "reviewState",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "artifactId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "artifactVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "learnerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "contentNodeId": {
+      "const": "S083"
+    },
+    "contentRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "classification": {
+      "enum": [
+        "PUBLIC_CURRICULUM",
+        "LEARNER_EVIDENCE",
+        "AUTHENTIC_WORK",
+        "EVIDENCE_TRANSCRIPT",
+        "COACHING_TRANSCRIPT",
+        "EVALUATION_PROVENANCE"
+      ]
+    },
+    "retentionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyId",
+        "retainUntil",
+        "deletionState"
+      ],
+      "properties": {
+        "policyId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retainUntil": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "deletionState": {
+          "enum": [
+            "ACTIVE",
+            "EXPIRY_DUE",
+            "DEIDENTIFICATION_DUE",
+            "LEGAL_HOLD"
+          ]
+        }
+      }
+    },
+    "storageReference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewState": {
+      "enum": [
+        "NOT_SUBMITTED",
+        "REVIEW_REQUIRED",
+        "CONFIRMED",
+        "CHANGES_REQUESTED",
+        "DISPUTED"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
