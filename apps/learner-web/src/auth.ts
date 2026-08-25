@@ -17,6 +17,8 @@ const developmentTenant =
 const developmentObject =
   import.meta.env.VITE_DEVELOPMENT_OBJECT_ID ??
   '22222222-2222-2222-2222-222222222222'
+const developmentRoles =
+  import.meta.env.VITE_DEVELOPMENT_ROLES ?? 'Learner,Administrator'
 
 let msalPromise: Promise<PublicClientApplication> | undefined
 let activeAccount: AccountInfo | undefined
@@ -66,6 +68,7 @@ export async function getAuthContext(): Promise<AuthContext> {
       headers: {
         'X-Fde-Tenant-Id': developmentTenant,
         'X-Fde-Object-Id': developmentObject,
+        'X-Fde-Roles': developmentRoles,
       },
       identityKey: `${developmentTenant}:${developmentObject}`,
     }

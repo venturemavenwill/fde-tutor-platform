@@ -1,10 +1,12 @@
 import { getAuthContext, type AuthContext } from './auth'
 import type {
+  AccessConsole,
   ApiFailure,
   CommandAccepted,
   Criterion,
   CriterionReveal,
   LearningHome,
+  ObservedUser,
   S083Content,
   SessionState,
   SourceOpen,
@@ -45,7 +47,18 @@ async function request<T>(
     headers.set('X-Correlation-Id', crypto.randomUUID())
   }
 
-  const response = await fetch(`${apiBase}${path}`, { ...init, headers })
+  let response: Response
+  try {
+    response = await fetch(`${apiBase}${path}`, { ...init, headers })
+  } catch (cause) {
+    if (cause instanceof TypeError) {
+      throw new ApiError(
+        `The platform API at ${apiBase} could not be reached. For local review, start the app with launch-fde-tutor.cmd and keep its window open.`,
+        0,
+      )
+    }
+    throw cause
+  }
   if (!response.ok) {
     const details = (await response.json().catch(() => undefined)) as
       | ApiFailure
@@ -122,6 +135,8 @@ async function command<T>(
 }
 
 export const api = {
+  getAccess: () => request<AccessConsole>('/api/v1/access'),
+  getObservedUsers: () => request<ObservedUser[]>('/api/v1/access/users'),
   getContent: () => request<S083Content>('/api/v1/s083/content'),
   getHome: () => request<LearningHome>('/api/v1/s083/learning-home'),
   getSession: (sessionId: string) =>

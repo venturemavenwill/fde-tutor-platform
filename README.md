@@ -174,11 +174,62 @@ The Tutor Platform itself is under active development. The approved first phase
 is building the S083 learner experience and the durable, LMS-independent
 platform spine. Pilot enrolment is not yet open.
 
+## Run the current S083 experience locally
+
+On Windows, clone the repository and double-click
+[`launch-fde-tutor.cmd`](launch-fde-tutor.cmd). The launcher:
+
+1. Checks for .NET 10, Node.js 24, and npm 11.
+2. Installs the locked npm dependencies on the first launch.
+3. Starts the development API and learner web app.
+4. Waits for both applications to become ready.
+5. Opens `http://127.0.0.1:5173` in your default browser.
+
+Keep the launcher window open while reviewing the experience. Press Enter in
+that window to stop both applications.
+
+Use **Identity & access** in the header to inspect the synthetic local subject,
+effective roles, tenant-scoped observed users, and the six-role authorization
+matrix. Production assignments are managed in Microsoft Entra; the local
+console cannot enrol users or grant production roles.
+
+The local launcher deliberately uses a synthetic development identity and
+in-memory persistence. Progress is discarded when it stops. This mode is for
+examining the S083 interaction and is not an offering-ready deployment.
+
+### Azure technical environment lifecycle
+
+The Azure scripts read their subscription, tenant, and resource names from
+`infra/azure/environment.local.json`. That file is intentionally not committed,
+because it identifies a private environment. Create it once before using any
+Azure command:
+
+```powershell
+Copy-Item infra/azure/environment.example.json infra/azure/environment.local.json
+# then fill in the values for your own environment
+```
+
+Every setting can also be passed explicitly as a script parameter, which
+overrides the file.
+
+The isolated Azure evidence environment uses paired lifecycle commands:
+
+- Double-click [`start-azure-fde-tutor.cmd`](start-azure-fde-tutor.cmd) to start
+  PostgreSQL first, then activate the app and HTTPS ingress.
+- Double-click [`stop-azure-fde-tutor.cmd`](stop-azure-fde-tutor.cmd) to disable
+  ingress, deactivate every app revision, and stop PostgreSQL only after the app
+  reaches zero replicas.
+
+A daily managed-identity watchdog re-stops PostgreSQL if Azure automatically
+starts it while the app remains marked stopped. Direct portal start/stop actions
+are not the supported lifecycle because they cannot guarantee ordering.
+
 ## About this repository
 
-The public repository currently contains this project overview. Product design,
-learning contracts, governance evidence, and implementation work remain private
-during the initial design and scaffolding phase.
+The public repository contains the S083 learner interface, deterministic
+learning policy, content package, API, persistence spine, projection worker,
+contracts, tests, infrastructure seed, and local development tooling. Internal
+governance, planning evidence, and coding-agent instructions remain private.
 
 The project is approved to build the S083 learner experience and its
 LMS-independent platform foundation. Pilot enrolment is not yet open.

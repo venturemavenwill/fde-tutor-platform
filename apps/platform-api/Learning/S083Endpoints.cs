@@ -11,7 +11,7 @@ public static class S083Endpoints
     {
         var group = endpoints
             .MapGroup("/api/v1/s083")
-            .RequireAuthorization("LearnerAccess")
+            .RequireAuthorization(PlatformPolicies.LearnerAccess)
             .WithTags("S083");
 
         group.MapGet("/content", async (

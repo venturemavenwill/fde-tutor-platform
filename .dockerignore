@@ -1,0 +1,15 @@
+.azure
+.git
+.github
+.playwright-mcp
+AGENTS.md
+backlog
+docs
+node_modules
+**/node_modules
+**/bin
+**/obj
+**/dist
+coverage
+tests
+*.log

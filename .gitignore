@@ -11,6 +11,11 @@
 !.env.example
 !**/.env.example
 
+# Private environment identifiers for the isolated technical-evidence
+# deployment. Never commit these: they name a real subscription, tenant, and
+# resource endpoints. See infra/azure/environment.example.json.
+/infra/azure/environment.local.json
+
 # Generated dependencies, build outputs, and tool state.
 node_modules/
 **/node_modules/
@@ -25,6 +30,7 @@ build/
 coverage/
 **/coverage/
 .playwright-mcp/
+.azure/
 
 # Python and operating-system artifacts.
 .venv/

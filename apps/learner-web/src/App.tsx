@@ -2,13 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import DOMPurify from 'dompurify'
 import './App.css'
 import { api, ApiError } from './api'
-import { authMode } from './auth'
+import { AccessConsole } from './components/AccessConsole'
 import { PromptSetForm } from './components/PromptSetForm'
 import { ResponseForm } from './components/ResponseForm'
 import type {
+  AccessConsole as AccessConsoleContract,
   CommandAccepted,
   Criterion,
   LearningHome,
+  ObservedUser,
   S083Content,
   SessionState,
 } from './contracts'
@@ -78,7 +80,56 @@ function getOrCreateRetrievalDueAt(sessionId: string): string {
   return dueAt
 }
 
+type SiteHeaderProps = {
+  access: AccessConsoleContract
+  accessOpen: boolean
+  expectedDurationMinutes?: number
+  retrievalDue?: boolean
+  onToggleAccess: () => void
+}
+
+function SiteHeader({
+  access,
+  accessOpen,
+  expectedDurationMinutes,
+  retrievalDue = false,
+  onToggleAccess,
+}: SiteHeaderProps) {
+  return (
+    <header className="site-header">
+      <a className="brand" href="#main">
+        <span>FDE</span> Tutor
+      </a>
+      <div className="header-meta">
+        {expectedDurationMinutes !== undefined && (
+          <>
+            <span>S083</span>
+            <span>{expectedDurationMinutes} minutes</span>
+          </>
+        )}
+        {retrievalDue && <span className="mode">Retrieval due</span>}
+        <span className="mode">
+          {access.currentUser.isSynthetic ? 'Local development' : 'Workforce'}
+        </span>
+        <button
+          type="button"
+          className="access-toggle"
+          aria-expanded={accessOpen}
+          aria-controls="identity-access"
+          onClick={onToggleAccess}
+        >
+          Identity &amp; access
+          <span>{access.currentUser.roles.length}</span>
+        </button>
+      </div>
+    </header>
+  )
+}
+
 function App() {
+  const [access, setAccess] = useState<AccessConsoleContract>()
+  const [observedUsers, setObservedUsers] = useState<ObservedUser[]>([])
+  const [accessOpen, setAccessOpen] = useState(false)
   const [content, setContent] = useState<S083Content>()
   const [home, setHome] = useState<LearningHome>()
   const [session, setSession] = useState<SessionState>()
@@ -152,6 +203,16 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
+      const loadedAccess = await api.getAccess()
+      setAccess(loadedAccess)
+      if (loadedAccess.currentUser.roles.includes('Administrator')) {
+        setObservedUsers(await api.getObservedUsers())
+      }
+      if (!loadedAccess.currentUser.roles.includes('Learner')) {
+        setAccessOpen(true)
+        return
+      }
+
       const [loadedContent, loadedHome] = await Promise.all([
         api.getContent(),
         api.getHome(),
@@ -328,6 +389,43 @@ function App() {
     }
   }
 
+  if (!access) {
+    return (
+      <output className="loading-shell">
+        {error ?? 'Loading identity and authorization…'}
+      </output>
+    )
+  }
+  const canUseLearnerRuntime = access.currentUser.roles.includes('Learner')
+  if (!canUseLearnerRuntime) {
+    return (
+      <div className="app-shell">
+        <SiteHeader
+          access={access}
+          accessOpen={accessOpen}
+          onToggleAccess={() => setAccessOpen((current) => !current)}
+        />
+        <main id="main">
+          {accessOpen && (
+            <AccessConsole
+              access={access}
+              users={observedUsers}
+              onClose={() => setAccessOpen(false)}
+            />
+          )}
+          <section className="role-gate" aria-labelledby="role-gate-title">
+            <p className="step">Access boundary</p>
+            <h1 id="role-gate-title">The Learner app role is required for S083</h1>
+            <p>
+              Your identity is valid, but its effective Microsoft Entra app roles
+              do not permit learner-state reads or commands. Role assignments are
+              managed outside this application.
+            </p>
+          </section>
+        </main>
+      </div>
+    )
+  }
   if (!content || !home) {
     return (
       <output className="loading-shell">
@@ -342,23 +440,22 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <a className="brand" href="#main">
-          <span>FDE</span> Tutor
-        </a>
-        <div className="header-meta">
-          <span>S083</span>
-          <span>{content.expectedDurationMinutes} minutes</span>
-          {home.dueRetrievals.some((item) => item.isDue) && (
-            <span className="mode">Retrieval due</span>
-          )}
-          <span className="mode">
-            {authMode === 'development' ? 'Local development' : 'Workforce'}
-          </span>
-        </div>
-      </header>
+      <SiteHeader
+        access={access}
+        accessOpen={accessOpen}
+        expectedDurationMinutes={content.expectedDurationMinutes}
+        retrievalDue={home.dueRetrievals.some((item) => item.isDue)}
+        onToggleAccess={() => setAccessOpen((current) => !current)}
+      />
 
       <main id="main">
+        {accessOpen && (
+          <AccessConsole
+            access={access}
+            users={observedUsers}
+            onClose={() => setAccessOpen(false)}
+          />
+        )}
         <section className="hero" aria-labelledby="page-title">
           <p className="eyebrow">Stage 9 · Compound</p>
           <h1 id="page-title">{content.title}</h1>
@@ -377,28 +474,6 @@ function App() {
         </section>
 
         <div className="learning-grid">
-          {sourceAbsentRecall ? (
-            <aside aria-labelledby="vocabulary-title">
-              <h2 id="vocabulary-title">Source-absent retrieval</h2>
-              <p>
-                Instructional cues are hidden until the retrieval response is
-                durably recorded.
-              </p>
-            </aside>
-          ) : (
-            <aside aria-labelledby="vocabulary-title">
-              <h2 id="vocabulary-title">Working vocabulary</h2>
-              <dl>
-                {content.vocabulary.map((item) => (
-                  <div key={item.term}>
-                    <dt>{item.term}</dt>
-                    <dd>{item.definition}</dd>
-                  </div>
-                ))}
-              </dl>
-            </aside>
-          )}
-
           <section className="learning-act" aria-live="polite">
             {recallLockPending ? (
               <output className="quiet-state">
@@ -525,6 +600,28 @@ function App() {
               <output className="notice">{notice}</output>
             )}
           </section>
+
+          {sourceAbsentRecall ? (
+            <aside aria-labelledby="vocabulary-title">
+              <h2 id="vocabulary-title">Source-absent retrieval</h2>
+              <p>
+                Instructional cues are hidden until the retrieval response is
+                durably recorded.
+              </p>
+            </aside>
+          ) : (
+            <aside aria-labelledby="vocabulary-title">
+              <h2 id="vocabulary-title">Working vocabulary</h2>
+              <dl>
+                {content.vocabulary.map((item) => (
+                  <div key={item.term}>
+                    <dt>{item.term}</dt>
+                    <dd>{item.definition}</dd>
+                  </div>
+                ))}
+              </dl>
+            </aside>
+          )}
         </div>
       </main>
     </div>

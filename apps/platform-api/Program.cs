@@ -1,6 +1,9 @@
+using FdeTutor.Api.Access;
 using FdeTutor.Api.Authentication;
 using FdeTutor.Api.Content;
 using FdeTutor.Api.Learning;
+using FdeTutor.Api.Projection;
+using FdeTutor.Domain.Authorization;
 using FdeTutor.Domain.Events;
 using FdeTutor.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -35,7 +38,7 @@ if (allowedOrigins.Length > 0)
 }
 
 var allowedTenantId = builder.Configuration["Authentication:AllowedTenantId"];
-if (!Guid.TryParse(allowedTenantId, out _))
+if (!Guid.TryParse(allowedTenantId, out var allowedTenant))
 {
     throw new InvalidOperationException("Authentication:AllowedTenantId must be a UUID.");
 }
@@ -60,6 +63,9 @@ else if (string.Equals(authenticationMode, "Entra", StringComparison.Ordinal))
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+    builder.Services.Configure<JwtBearerOptions>(
+        JwtBearerDefaults.AuthenticationScheme,
+        options => options.TokenValidationParameters.RoleClaimType = "roles");
 }
 else
 {
@@ -69,22 +75,46 @@ else
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("LearnerAccess", policy =>
+    options.AddPolicy(PlatformPolicies.AuthenticatedAccess, policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
-            context.User.Claims
-                .Where(claim =>
-                    claim.Type == "scp" ||
-                    claim.Type == "http://schemas.microsoft.com/identity/claims/scope")
-                .SelectMany(claim => claim.Value.Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries))
-                .Contains("access_as_user", StringComparer.Ordinal));
+            PlatformClaims.HasDelegatedScope(context.User, "access_as_user"));
+        policy.RequireAssertion(context =>
+            PlatformClaims.HasApprovedSubject(context.User, allowedTenant));
+    });
+    options.AddPolicy(PlatformPolicies.LearnerAccess, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+            PlatformClaims.HasDelegatedScope(context.User, "access_as_user"));
+        policy.RequireAssertion(context =>
+            PlatformClaims.HasApprovedSubject(context.User, allowedTenant));
+        policy.RequireAssertion(context =>
+            PlatformClaims.GetKnownRoles(context.User).Contains(PlatformRoles.Learner));
+    });
+    options.AddPolicy(PlatformPolicies.AdministratorAccess, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+            PlatformClaims.HasDelegatedScope(context.User, "access_as_user"));
+        policy.RequireAssertion(context =>
+            PlatformClaims.HasApprovedSubject(context.User, allowedTenant));
+        policy.RequireAssertion(context =>
+            PlatformClaims.GetKnownRoles(context.User).Contains(PlatformRoles.Administrator));
     });
 });
 
 var persistenceProvider = builder.Configuration["Persistence:Provider"];
+if (builder.Environment.IsEnvironment("TechnicalEvidence") &&
+    (!string.Equals(authenticationMode, "Entra", StringComparison.Ordinal) ||
+     !string.Equals(persistenceProvider, "Postgres", StringComparison.Ordinal) ||
+     !builder.Configuration.GetValue("Deployment:EvidenceOnly", false)))
+{
+    throw new InvalidOperationException(
+        "TechnicalEvidence requires Entra, PostgreSQL, and Deployment:EvidenceOnly=true.");
+}
+
 if (string.Equals(persistenceProvider, "InMemory", StringComparison.Ordinal))
 {
     if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"))
@@ -94,6 +124,7 @@ if (string.Equals(persistenceProvider, "InMemory", StringComparison.Ordinal))
     }
 
     builder.Services.AddSingleton<ILearnerEventStore, InMemoryLearnerEventStore>();
+    builder.Services.AddSingleton<IPlatformUserDirectory, InMemoryPlatformUserDirectory>();
 }
 else if (string.Equals(persistenceProvider, "Postgres", StringComparison.Ordinal))
 {
@@ -107,6 +138,14 @@ else if (string.Equals(persistenceProvider, "Postgres", StringComparison.Ordinal
     builder.Services.AddDbContext<FdeTutorDbContext>(
         options => options.UseNpgsql(connectionString));
     builder.Services.AddScoped<ILearnerEventStore, PostgresLearnerEventStore>();
+    builder.Services.AddScoped<IPlatformUserDirectory, PostgresPlatformUserDirectory>();
+    builder.Services.AddScoped<SqlMigrationRunner>();
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddScoped<S083ProjectionBatchProcessor>();
+    if (builder.Configuration.GetValue("Projection:Enabled", false))
+    {
+        builder.Services.AddHostedService<S083ProjectionHostedService>();
+    }
 }
 else
 {
@@ -143,7 +182,25 @@ builder.Services
 
 var app = builder.Build();
 
+if (string.Equals(persistenceProvider, "Postgres", StringComparison.Ordinal) &&
+    builder.Configuration.GetValue("Database:ApplyMigrations", false))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var migrationsRoot = builder.Configuration["Database:MigrationsRoot"];
+    if (string.IsNullOrWhiteSpace(migrationsRoot))
+    {
+        throw new InvalidOperationException(
+            "Database:MigrationsRoot is required when migrations are enabled.");
+    }
+
+    await scope.ServiceProvider
+        .GetRequiredService<SqlMigrationRunner>()
+        .ApplyAsync(migrationsRoot, CancellationToken.None);
+}
+
 app.UseExceptionHandler();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 if (allowedOrigins.Length > 0)
 {
     app.UseCors("LearnerWeb");
@@ -158,10 +215,29 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "live" }))
     .AllowAnonymous();
-app.MapGet("/health/ready", (S083ContentProvider _) =>
-        Results.Ok(new { status = "ready" }))
+app.MapGet("/health/ready", async (
+    S083ContentProvider _,
+    IServiceProvider services,
+    CancellationToken cancellationToken) =>
+{
+    if (string.Equals(persistenceProvider, "Postgres", StringComparison.Ordinal))
+    {
+        await using var scope = services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<FdeTutorDbContext>();
+        if (!await database.Database.CanConnectAsync(cancellationToken))
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "The canonical database is unavailable.");
+        }
+    }
+
+    return Results.Ok(new { status = "ready" });
+})
     .AllowAnonymous();
 app.MapS083Endpoints();
+app.MapAccessEndpoints();
+app.MapFallbackToFile("index.html").AllowAnonymous();
 
 app.Run();
 

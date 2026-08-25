@@ -20,6 +20,8 @@ public sealed class FdeTutorDbContext(DbContextOptions<FdeTutorDbContext> option
 
     public DbSet<DueRetrievalEntity> DueRetrievals => Set<DueRetrievalEntity>();
 
+    public DbSet<PlatformUserEntity> PlatformUsers => Set<PlatformUserEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var events = modelBuilder.Entity<LearnerEventEntity>();
@@ -151,5 +153,28 @@ public sealed class FdeTutorDbContext(DbContextOptions<FdeTutorDbContext> option
         due.Property(item => item.SourceEventId).HasColumnName("source_event_id");
         due.Property(item => item.DueAt).HasColumnName("due_at");
         due.Property(item => item.CompletedEventId).HasColumnName("completed_event_id");
+
+        var users = modelBuilder.Entity<PlatformUserEntity>();
+        users.ToTable("platform_users");
+        users.HasKey(item => new { item.TenantId, item.ObjectId });
+        users.Property(item => item.TenantId).HasColumnName("tenant_id");
+        users.Property(item => item.ObjectId).HasColumnName("object_id");
+        users.Property(item => item.ExternalSubject)
+            .HasColumnName("external_subject")
+            .HasMaxLength(80);
+        users.Property(item => item.AuthenticationMode)
+            .HasColumnName("authentication_mode")
+            .HasMaxLength(32);
+        users.Property(item => item.RolesJson)
+            .HasColumnName("roles")
+            .HasColumnType("jsonb");
+        users.Property(item => item.FirstObservedAt).HasColumnName("first_observed_at");
+        users.Property(item => item.LastObservedAt).HasColumnName("last_observed_at");
+        users.HasIndex(item => new
+        {
+            item.TenantId,
+            item.LastObservedAt,
+            item.ObjectId,
+        });
     }
 }

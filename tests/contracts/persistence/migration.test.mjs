@@ -6,6 +6,10 @@ const migration = await readFile(
   new URL('../../../infra/db/migrations/0001_learner_events.sql', import.meta.url),
   'utf8',
 )
+const userMigration = await readFile(
+  new URL('../../../infra/db/migrations/0002_platform_users.sql', import.meta.url),
+  'utf8',
+)
 
 test('canonical events have a database sequence and append-only trigger', () => {
   assert.match(migration, /recorded_sequence bigint GENERATED ALWAYS AS IDENTITY/i)
@@ -32,4 +36,11 @@ test('projection state is replayable and exposes poison state', () => {
   assert.match(migration, /last_error varchar\(2000\) NULL/i)
   assert.doesNotMatch(migration, /mastery/i)
   assert.doesNotMatch(migration, /entrustment/i)
+})
+
+test('the user directory is tenant keyed and does not make email an identity key', () => {
+  assert.match(userMigration, /CREATE TABLE IF NOT EXISTS platform_users/i)
+  assert.match(userMigration, /PRIMARY KEY \(tenant_id, object_id\)/i)
+  assert.match(userMigration, /roles jsonb NOT NULL/i)
+  assert.doesNotMatch(userMigration, /email/i)
 })

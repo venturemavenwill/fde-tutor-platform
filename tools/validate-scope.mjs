@@ -73,6 +73,7 @@ const requiredPrivatePaths = [
   '.github/instructions/fde-tutor-knowledge.instructions.md',
   'docs/design-brief.md',
   'backlog/phase0-1.json',
+  'infra/azure/environment.local.json',
 ]
 for (const path of requiredPrivatePaths) {
   try {
@@ -84,15 +85,35 @@ for (const path of requiredPrivatePaths) {
 
 const requiredPublicPaths = [
   '.gitignore',
+  '.dockerignore',
+  'Dockerfile',
   'README.md',
+  'start-azure-fde-tutor.cmd',
+  'stop-azure-fde-tutor.cmd',
+  'launch-fde-tutor.cmd',
   'package.json',
+  'apps/platform-api/Access/AccessEndpoints.cs',
   'apps/platform-api/Program.cs',
+  'apps/learner-web/src/components/AccessConsole.tsx',
   'apps/learner-web/src/App.tsx',
   'content-package/manifest.json',
+  'infra/db/migrations/0002_platform_users.sql',
+  'infra/azure/main.bicep',
+  'infra/azure/resources.bicep',
+  'infra/azure/deploy.ps1',
+  'infra/azure/lifecycle.ps1',
+  'infra/azure/verify-recovery.ps1',
+  'infra/azure/environment.ps1',
+  'infra/azure/environment.example.json',
+  'infra/identity/entra-app-roles.json',
   'infra/db/migrations/0001_learner_events.sql',
+  'packages/platform-domain/Authorization/Phase1AuthorizationMatrix.cs',
   'packages/platform-domain/Policy/S083Policy.cs',
   'services/projection-worker/Worker.cs',
   'tests/FdeTutor.Api.Tests/S083ApiTests.cs',
+  'tools/launch-fde-tutor.ps1',
+  'tools/FdeTutor.PersistenceEvidence/Program.cs',
+  'tools/validate-identity.mjs',
   'tools/validate-contracts.mjs',
 ]
 for (const path of requiredPublicPaths) {
@@ -107,6 +128,46 @@ for (const path of requiredPublicPaths) {
   }
 }
 
+// No committed infrastructure file may name a real environment. Subscription,
+// tenant, and application GUIDs and live host names belong in the git-ignored
+// environment.local.json, never in tracked scripts or templates.
+const environmentIdentifier =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[a-z0-9-]+\.azurecontainerapps\.io|[a-z0-9-]+\.postgres\.database\.azure\.com/gi
+const allowedIdentifiers = new Set([
+  // Documentation placeholder.
+  '00000000-0000-0000-0000-000000000000',
+  // Microsoft's well-known public Azure CLI client ID. It is the same in every
+  // tenant, is published by Microsoft, and identifies no private environment.
+  '04b07795-8ddb-461a-bbee-02f9e1bf7b46',
+])
+// A host preceded by one of these is PowerShell interpolation such as
+// "Host=$ServerName.postgres.database.azure.com", not a literal endpoint.
+const interpolationPrefixes = new Set(['$', ')', '}'])
+const environmentLeaks = []
+for (const path of tracked.filter(
+  (candidate) =>
+    candidate.startsWith('infra/azure/') &&
+    candidate !== 'infra/azure/environment.example.json',
+)) {
+  const content = await readFile(join(root, path), 'utf8')
+  for (const match of content.matchAll(environmentIdentifier)) {
+    const value = match[0]
+    if (allowedIdentifiers.has(value.toLowerCase())) continue
+    if (
+      match.index > 0 &&
+      interpolationPrefixes.has(content[match.index - 1])
+    ) {
+      continue
+    }
+    environmentLeaks.push(`${path}: ${value}`)
+  }
+}
+if (environmentLeaks.length > 0) {
+  throw new Error(
+    `Committed infrastructure names a real environment: ${environmentLeaks.join(', ')}`,
+  )
+}
+
 console.log(
   JSON.stringify({
     implementationFileCount: implementationFiles.length,
@@ -115,5 +176,6 @@ console.log(
     trackedFileCount: tracked.length,
     requiredPublicPathCount: requiredPublicPaths.length,
     privatePathCount: requiredPrivatePaths.length,
+    environmentLeakCount: 0,
   }),
 )

@@ -7,14 +7,15 @@
     "apps/learner-web"
   ],
   "scripts": {
-    "build": "npm run contracts:validate && npm run openapi:validate && npm run scope:validate && npm run build --workspace @fde-tutor/learner-web && dotnet build FdeTutor.sln",
+    "build": "npm run contracts:validate && npm run identity:validate && npm run openapi:validate && npm run scope:validate && npm run build --workspace @fde-tutor/learner-web && dotnet build FdeTutor.sln",
     "contracts:hash": "node tools/hash-content-package.mjs",
     "contracts:validate": "node tools/validate-contracts.mjs",
     "contracts:offering": "node tools/validate-contracts.mjs --offering",
+    "identity:validate": "node tools/validate-identity.mjs",
     "openapi:validate": "node tools/validate-openapi.mjs",
     "scope:validate": "node tools/validate-scope.mjs",
     "lint": "npm run lint --workspace @fde-tutor/learner-web && dotnet format FdeTutor.sln --verify-no-changes --no-restore",
-    "test": "npm run test:contracts && npm run openapi:validate && npm run scope:validate && npm run test --workspace @fde-tutor/learner-web && dotnet test FdeTutor.sln",
+    "test": "npm run test:contracts && npm run identity:validate && npm run openapi:validate && npm run scope:validate && npm run test --workspace @fde-tutor/learner-web && dotnet test FdeTutor.sln",
     "validate": "npm run lint && npm run build && npm test",
     "test:contracts": "node --test tests/contracts/**/*.test.mjs"
   },

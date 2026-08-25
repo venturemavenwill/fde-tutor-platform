@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
 import { beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
@@ -24,14 +25,79 @@ const content = {
   masteryEffect: 'NONE',
 }
 
+const access = {
+  schemaVersion: '1.0.0',
+  matrixVersion: 'g02-phase1-1',
+  currentUser: {
+    tenantId: '11111111-1111-1111-1111-111111111111',
+    objectId: '22222222-2222-2222-2222-222222222222',
+    externalSubject:
+      '11111111-1111-1111-1111-111111111111:22222222-2222-2222-2222-222222222222',
+    authenticationMode: 'Development',
+    isSynthetic: true,
+    roles: ['Learner', 'Administrator'],
+    effectiveCapabilities: [
+      'identity.read-own',
+      's083.read-own',
+      's083.append-own',
+      'directory.read-tenant',
+    ],
+  },
+  userManagement: {
+    assignmentAuthority: 'Development-only synthetic role headers',
+    roleMutationAvailable: false,
+    enrolmentAvailable: false,
+    directoryMode: 'InMemory',
+  },
+  roles: [
+    'Learner',
+    'Instructor',
+    'Reviewer',
+    'Author',
+    'Administrator',
+    'Operator',
+  ].map((role) => ({ id: role, label: role, description: `${role} role` })),
+  capabilities: [
+    {
+      id: 'identity.read-own',
+      label: 'Read own identity and access',
+      constraint: 'Validated caller only.',
+      access: {
+        Learner: 'Allow',
+        Instructor: 'Allow',
+        Reviewer: 'Allow',
+        Author: 'Allow',
+        Administrator: 'Allow',
+        Operator: 'Allow',
+      },
+    },
+  ],
+}
+
+const observedUsers = [
+  {
+    tenantId: access.currentUser.tenantId,
+    objectId: access.currentUser.objectId,
+    externalSubject: access.currentUser.externalSubject,
+    authenticationMode: 'Development',
+    roles: ['Learner', 'Administrator'],
+    firstObservedAt: '2026-08-24T00:00:00Z',
+    lastObservedAt: '2026-08-24T00:00:00Z',
+  },
+]
+
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-      const body = url.endsWith('/content')
-        ? content
-        : { current: null, dueRetrievals: [] }
+      const body = url.endsWith('/access/users')
+        ? observedUsers
+        : url.endsWith('/access')
+          ? access
+          : url.endsWith('/content')
+            ? content
+            : { current: null, dueRetrievals: [] }
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -53,6 +119,16 @@ test('introduces S083 without exposing the locked criterion', async () => {
     screen.queryByText('A customer-owned remedy names all four'),
   ).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Start S083' })).toBeEnabled()
+  const learningHeading = screen.getByRole('heading', {
+    name: 'Start with your own reasoning',
+  })
+  const vocabularyHeading = screen.getByRole('heading', {
+    name: 'Working vocabulary',
+  })
+  expect(
+    learningHeading.compareDocumentPosition(vocabularyHeading) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
 })
 
 test('initial learner page has no automated accessibility violations', async () => {
@@ -65,6 +141,72 @@ test('initial learner page has no automated accessibility violations', async () 
     },
   })
   expect(results.violations).toEqual([])
+})
+
+test('shows the current identity, user boundary, and six-role matrix', async () => {
+  const user = userEvent.setup()
+  const { container } = render(<App />)
+
+  await user.click(
+    await screen.findByRole('button', { name: /Identity & access/ }),
+  )
+
+  expect(
+    screen.getByRole('heading', { name: 'Identity and user access' }),
+  ).toBeInTheDocument()
+  expect(screen.getAllByText(access.currentUser.objectId).length).toBeGreaterThan(0)
+  expect(screen.getByText('Observed users in this tenant')).toBeInTheDocument()
+  expect(screen.getByText('Authorization matrix')).toBeInTheDocument()
+  for (const role of access.roles) {
+    expect(
+      screen.getByRole('columnheader', { name: role.label }),
+    ).toBeInTheDocument()
+  }
+  expect(screen.getByText('Not available in this application')).toBeInTheDocument()
+  expect(screen.getByText('Not open')).toBeInTheDocument()
+  const results = await axe.run(container, {
+    rules: {
+      'color-contrast': { enabled: false },
+    },
+  })
+  expect(results.violations).toEqual([])
+})
+
+test('keeps a non-learner identity out of the S083 runtime', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (!url.endsWith('/access')) {
+        throw new Error(`Unexpected learner request: ${url}`)
+      }
+      return new Response(
+        JSON.stringify({
+          ...access,
+          currentUser: {
+            ...access.currentUser,
+            roles: ['Reviewer'],
+            effectiveCapabilities: ['identity.read-own'],
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
+    }),
+  )
+
+  render(<App />)
+
+  expect(
+    await screen.findByRole('heading', {
+      name: 'The Learner app role is required for S083',
+    }),
+  ).toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', { name: 'Start S083' }),
+  ).not.toBeInTheDocument()
 })
 
 test('prioritizes a due retrieval over a newer incomplete session', async () => {
@@ -88,7 +230,11 @@ test('prioritizes a due retrieval over a newer incomplete session', async () => 
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       let body: unknown
-      if (url.endsWith('/content')) {
+      if (url.endsWith('/access/users')) {
+        body = observedUsers
+      } else if (url.endsWith('/access')) {
+        body = access
+      } else if (url.endsWith('/content')) {
         body = content
       } else if (url.endsWith('/learning-home')) {
         body = {
@@ -145,7 +291,11 @@ test('renders the acknowledged unpaid remedy during comparison', async () => {
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       let body: unknown
-      if (url.endsWith('/content')) {
+      if (url.endsWith('/access/users')) {
+        body = observedUsers
+      } else if (url.endsWith('/access')) {
+        body = access
+      } else if (url.endsWith('/content')) {
         body = content
       } else if (url.endsWith('/learning-home')) {
         body = {
@@ -234,7 +384,11 @@ test('refreshes an open scheduled session when its due time arrives', async () =
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       let body: unknown
-      if (url.endsWith('/content')) {
+      if (url.endsWith('/access/users')) {
+        body = observedUsers
+      } else if (url.endsWith('/access')) {
+        body = access
+      } else if (url.endsWith('/content')) {
         body = content
       } else {
         homeRequests += 1

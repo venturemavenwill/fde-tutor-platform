@@ -12,6 +12,8 @@ if (document.openapi !== '3.1.0') {
 }
 
 const requiredPaths = [
+  '/api/v1/access',
+  '/api/v1/access/users',
   '/api/v1/s083/content',
   '/api/v1/s083/learning-home',
   '/api/v1/s083/sessions',
@@ -45,6 +47,15 @@ if (forbidden.length > 0) {
 
 if (!document.components?.securitySchemes?.entra) {
   throw new Error('The OpenAPI contract must declare Entra OAuth.')
+}
+
+const accessSchema = document.components?.schemas?.AccessConsoleResponse
+const userSchema = document.components?.schemas?.ObservedUserResponse
+if (!accessSchema || !userSchema) {
+  throw new Error('The OpenAPI contract must expose access and observed-user schemas.')
+}
+if ('email' in (userSchema.properties ?? {})) {
+  throw new Error('The durable user directory must not use or expose email as identity.')
 }
 
 const retrievalSchedule =

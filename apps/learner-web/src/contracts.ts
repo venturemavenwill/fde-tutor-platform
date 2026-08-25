@@ -122,3 +122,58 @@ export type ApiFailure = {
   message: string
   requiredAction?: string
 }
+
+export type PlatformRole =
+  | 'Learner'
+  | 'Instructor'
+  | 'Reviewer'
+  | 'Author'
+  | 'Administrator'
+  | 'Operator'
+
+export type AuthorizationDisposition =
+  | 'Allow'
+  | 'Deny'
+  | 'Deferred'
+  | 'External'
+
+export type AccessConsole = {
+  schemaVersion: '1.0.0'
+  matrixVersion: string
+  currentUser: {
+    tenantId: string
+    objectId: string
+    externalSubject: string
+    authenticationMode: 'Development' | 'Entra'
+    isSynthetic: boolean
+    roles: PlatformRole[]
+    effectiveCapabilities: string[]
+  }
+  userManagement: {
+    assignmentAuthority: string
+    roleMutationAvailable: false
+    enrolmentAvailable: false
+    directoryMode: 'InMemory' | 'Postgres'
+  }
+  roles: {
+    id: PlatformRole
+    label: string
+    description: string
+  }[]
+  capabilities: {
+    id: string
+    label: string
+    constraint: string
+    access: Record<PlatformRole, AuthorizationDisposition>
+  }[]
+}
+
+export type ObservedUser = {
+  tenantId: string
+  objectId: string
+  externalSubject: string
+  authenticationMode: 'Development' | 'Entra'
+  roles: PlatformRole[]
+  firstObservedAt: string
+  lastObservedAt: string
+}

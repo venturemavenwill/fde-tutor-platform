@@ -1,11 +1,12 @@
 openapi: 3.1.0
 info:
-  title: FDE Tutor S083 Platform API
+  title: FDE Tutor Phase 1 Platform API
   version: 1.0.0
   description: >
-    Phase 1 no-LMS API for the S083 learning loop. All commands require a
-    validated learner identity and an Idempotency-Key. S083 is
-    non-assessment-bearing and has no mastery effect.
+    Phase 1 no-LMS API for Entra-backed identity, tenant-scoped access metadata,
+    and the S083 learning loop. Learning commands require a validated Learner
+    app role and an Idempotency-Key. S083 is non-assessment-bearing and has no
+    mastery effect.
 servers:
   - url: http://localhost:5080
     description: Local development
@@ -13,6 +14,35 @@ security:
   - entra:
       - access_as_user
 paths:
+  /api/v1/access:
+    get:
+      summary: Get the signed-in user's identity and the G-02 authorization matrix
+      responses:
+        "200":
+          description: Durable subject, effective app roles, and six-role matrix
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessConsoleResponse"
+        "403":
+          description: Missing delegated scope or approved tenant/object claims
+  /api/v1/access/users:
+    get:
+      summary: List tenant-scoped observed user metadata
+      description: >
+        Requires the Administrator app role. Microsoft Entra remains the
+        assignment authority; this endpoint does not enrol users or mutate roles.
+      responses:
+        "200":
+          description: Tenant-scoped durable subjects without email or learner evidence
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObservedUserResponse"
+        "403":
+          description: Administrator app role required
   /api/v1/s083/content:
     get:
       summary: Get the public, pre-reveal S083 content contract
@@ -161,6 +191,141 @@ components:
         minLength: 8
         maxLength: 128
   schemas:
+    AccessConsoleResponse:
+      type: object
+      required:
+        - schemaVersion
+        - matrixVersion
+        - currentUser
+        - userManagement
+        - roles
+        - capabilities
+      properties:
+        schemaVersion:
+          type: string
+        matrixVersion:
+          type: string
+        currentUser:
+          $ref: "#/components/schemas/CurrentUserAccessResponse"
+        userManagement:
+          $ref: "#/components/schemas/UserManagementBoundaryResponse"
+        roles:
+          type: array
+          minItems: 6
+          maxItems: 6
+          items:
+            $ref: "#/components/schemas/AuthorizationRoleResponse"
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorizationCapabilityResponse"
+    CurrentUserAccessResponse:
+      type: object
+      required:
+        - tenantId
+        - objectId
+        - externalSubject
+        - authenticationMode
+        - isSynthetic
+        - roles
+        - effectiveCapabilities
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        objectId:
+          type: string
+          format: uuid
+        externalSubject:
+          type: string
+        authenticationMode:
+          type: string
+          enum: [Development, Entra]
+        isSynthetic:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+        effectiveCapabilities:
+          type: array
+          items:
+            type: string
+    UserManagementBoundaryResponse:
+      type: object
+      required:
+        - assignmentAuthority
+        - roleMutationAvailable
+        - enrolmentAvailable
+        - directoryMode
+      properties:
+        assignmentAuthority:
+          type: string
+        roleMutationAvailable:
+          type: boolean
+          const: false
+        enrolmentAvailable:
+          type: boolean
+          const: false
+        directoryMode:
+          type: string
+          enum: [InMemory, Postgres]
+    AuthorizationRoleResponse:
+      type: object
+      required: [id, label, description]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+    AuthorizationCapabilityResponse:
+      type: object
+      required: [id, label, constraint, access]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        constraint:
+          type: string
+        access:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [Allow, Deny, Deferred, External]
+    ObservedUserResponse:
+      type: object
+      required:
+        - tenantId
+        - objectId
+        - externalSubject
+        - authenticationMode
+        - roles
+        - firstObservedAt
+        - lastObservedAt
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        objectId:
+          type: string
+          format: uuid
+        externalSubject:
+          type: string
+        authenticationMode:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        firstObservedAt:
+          type: string
+          format: date-time
+        lastObservedAt:
+          type: string
+          format: date-time
     RevisionRequest:
       type: object
       required:

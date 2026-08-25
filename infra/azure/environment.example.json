@@ -1,0 +1,22 @@
+{
+  "$comment": [
+    "Copy this file to environment.local.json and fill in the values for your",
+    "isolated technical-evidence environment. environment.local.json is",
+    "git-ignored and must never be committed: it records the subscription,",
+    "tenant, and resource endpoints of a private environment.",
+    "ADR-010 authorizes this environment for technical evidence only. It is not",
+    "a pilot environment and carries no pilot region or provider approval."
+  ],
+  "subscriptionId": "00000000-0000-0000-0000-000000000000",
+  "tenantId": "00000000-0000-0000-0000-000000000000",
+  "location": "westus3",
+  "environmentName": "dev",
+  "resourceGroupName": "azrgexample",
+  "containerAppName": "azappexample",
+  "postgresServerName": "azpgexample",
+  "restoredPostgresServerName": "azpgrexample",
+  "keyVaultName": "azkvexample",
+  "applicationUrl": "https://azappexample.example-region.azurecontainerapps.io",
+  "apiScope": "api://00000000-0000-0000-0000-000000000000/access_as_user",
+  "evidenceSessionId": "00000000-0000-0000-0000-000000000000"
+}

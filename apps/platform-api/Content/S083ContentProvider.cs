@@ -60,8 +60,12 @@ public sealed class S083ContentProvider
         ValidateLearningInvariants();
 
         var offeringStatus = RequiredString(manifest.RootElement, "offering_status");
+        var technicalEvidence =
+            environment.IsEnvironment("TechnicalEvidence") &&
+            configuration.GetValue("Deployment:EvidenceOnly", false);
         if (!environment.IsDevelopment() &&
-            !environment.IsEnvironment("Testing"))
+            !environment.IsEnvironment("Testing") &&
+            !technicalEvidence)
         {
             ValidateOfferingReadiness(offeringStatus);
         }

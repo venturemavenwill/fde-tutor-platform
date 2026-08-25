@@ -1,0 +1,52 @@
+{
+  "appRoles": [
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Complete and revisit the signed-in learner's own S083 work.",
+      "displayName": "Learner",
+      "id": "417e7a69-eb7a-422e-a2cb-516b82b28ad0",
+      "isEnabled": true,
+      "value": "Learner"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Reserved for future cohort guidance under explicit assignment scope.",
+      "displayName": "Instructor",
+      "id": "6d28d45a-4bd9-4e07-befe-9de2f1f79cc5",
+      "isEnabled": true,
+      "value": "Instructor"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Reserved for future scoped evidence review and recusal workflows.",
+      "displayName": "Reviewer",
+      "id": "1a1d9c08-835b-44be-8658-2ead5b4b0aab",
+      "isEnabled": true,
+      "value": "Reviewer"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Reserved for future versioned content publishing workflows.",
+      "displayName": "Author",
+      "id": "ca217b61-7002-4dc6-a2f3-15c72060794f",
+      "isEnabled": true,
+      "value": "Author"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Read tenant-scoped user metadata and manage assignments through Microsoft Entra.",
+      "displayName": "Learning administrator",
+      "id": "a3ad7ea0-4c68-431c-84df-2e148f2cdc6f",
+      "isEnabled": true,
+      "value": "Administrator"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Run controlled platform deployment and recovery operations.",
+      "displayName": "Platform operator",
+      "id": "adaaf7df-a828-4794-afc0-80aafefaff38",
+      "isEnabled": true,
+      "value": "Operator"
+    }
+  ]
+}

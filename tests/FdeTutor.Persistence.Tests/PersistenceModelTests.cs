@@ -33,6 +33,22 @@ public sealed class PersistenceModelTests
             name.Contains("Entrustment", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void PlatformUserDirectoryUsesTenantAndObjectCompositeIdentity()
+    {
+        using var context = CreateContext();
+        var userType = context.Model.FindEntityType(typeof(PlatformUserEntity));
+        var key = userType?.FindPrimaryKey();
+        var properties = userType?.GetProperties().Select(property => property.Name).ToArray();
+
+        Assert.Equal(
+            [nameof(PlatformUserEntity.TenantId), nameof(PlatformUserEntity.ObjectId)],
+            key?.Properties.Select(property => property.Name));
+        Assert.DoesNotContain(
+            properties!,
+            property => property.Contains("Email", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static FdeTutorDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<FdeTutorDbContext>()
